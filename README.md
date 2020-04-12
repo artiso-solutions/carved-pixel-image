@@ -4,7 +4,7 @@ Python helper to generate a pixelated image from a source image and then generat
 # Source Image
 A good source image has not too much of details, as it is important to downsample the image. Also the contrast has to be pretty high for good results. One example of an image might be a logo or a portrait. For testing we used our artiso logo changed in the colors and added a simple gradient background:
 
-<img src="https://github.com/artiso-solutions/carved-pixel-image/blob/master/documentation/artiso.png" alt="Source image - artiso logo" width="500"/>
+<img src="documentation/artiso.png" alt="Source image - artiso logo" width="500"/>
 
 ## Resolution
 To pixelate the image the resolution of the image should be something common and also the aspect ratio shold be reasonable. For testing we resiyed the image to an aspect ration of 16:9 and also decided how our target resolution should be. We used a target resolution of 80 pixel width and 45 pixel width. Therefore we have chosen a multitude of this resolution for the source image.
@@ -14,4 +14,13 @@ The image will be converted to grayscale. In the current version there is no ada
 
 To test the source image one can define the commanline option `--imgsave` to save the grayscale and pixelated image to disk in the same directory as the source image. This can help to optimize the source image in multiple iterations. The pixelated image of the artiso logo looks like this:
 
-<img src="https://github.com/artiso-solutions/carved-pixel-image/blob/master/documentation/artiso_pixelated.png" alt="Grayscale pixelated image - artiso logo" width="500"/>
+<img src="documentation/artiso_pixelated.png" alt="Grayscale pixelated image - artiso logo" width="500"/>
+
+
+# DXF Generation
+
+# Producing Art
+
+# Tweaking the output
+
+# Future Optimization
