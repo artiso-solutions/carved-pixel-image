@@ -11,6 +11,7 @@ def main():
     parser = argparse.ArgumentParser(description='Generate pixel art dxf for input image.')
     parser.add_argument('input_files', metavar='image', nargs='+', help='input images for processing')
     parser.add_argument('--show', action='store_true', help='should show generated pixelated image (default false)')
+    parser.add_argument('--imgsave', action='store_true', help='save intermediate images (default false)')
 
     args = parser.parse_args()
 
@@ -18,7 +19,7 @@ def main():
         outputFile = f'{os.path.splitext(input_file)[0]}.dxf'
         print(f'generating pixel art on input image {input_file} writing output dxf file to {outputFile}')
 
-        (img_original, img_grayscale, img_pixelated) = prepare_images(input_file)
+        (img_original, img_grayscale, img_pixelated) = prepare_images(input_file, args.imgsave)
         generate_dxf(img_pixelated, outputFile)
         if args.show == True:
             show_output_images(img_original, img_grayscale, img_pixelated)
@@ -62,7 +63,7 @@ def show_output_images(img_original, img_grayscale, img_pixelated):
     fig.tight_layout()
     plt.show()
 
-def prepare_images(input_file_path):
+def prepare_images(input_file_path, save_temp_images):
     from skimage import io
     from skimage import data
     from skimage.color import rgb2gray
@@ -75,7 +76,22 @@ def prepare_images(input_file_path):
     img_grayscale = rgb2gray(img_original)
     print(f' - resize from {img_original.shape[1]}x{img_original.shape[0]} to {TARGET_WIDTH}x{TARGET_HEIGHT}')
     img_pixelated = resize(img_grayscale, (TARGET_HEIGHT, TARGET_WIDTH))
+    
+
+    if save_temp_images:
+        input_image_parts = os.path.splitext(input_file_path)
+        temp_output_base_path = f'{input_image_parts[0]}'
+        temp_output_base_extension = f'{input_image_parts[1]}'
+
+        grayscale_imge_file_path = f'{temp_output_base_path}_grayscale{temp_output_base_extension}'
+        pixelated_imge_file_path = f'{temp_output_base_path}_pixelated{temp_output_base_extension}'
+        io.imsave(grayscale_imge_file_path, img_grayscale)
+        print(f' - saved intermediate grayscale image to {grayscale_imge_file_path}')
+        io.imsave(pixelated_imge_file_path, img_pixelated)
+        print(f' - saved pixelated image to {pixelated_imge_file_path}')
+
     print('images prepared')
+
     return (img_original, img_grayscale, img_pixelated)
 
 
