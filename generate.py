@@ -6,13 +6,22 @@ TARGET_HEIGHT = 45
 MM_PER_PIXEL = 6
 
 def main():
-    inputFile = './artiso.png'
-    outputFile = f'{os.path.splitext(inputFile)[0]}.dxf'
-    print(f'generating pixel art on input image {inputFile} writing output dxf file to {outputFile}')
+    import argparse
 
-    (img_original, img_grayscale, img_pixelated) = prepare_images(inputFile)
-    generate_dxf(img_pixelated, outputFile)
-    show_output_images(img_original, img_grayscale, img_pixelated)
+    parser = argparse.ArgumentParser(description='Generate pixel art dxf for input image.')
+    parser.add_argument('input_files', metavar='image', nargs='+', help='input images for processing')
+    parser.add_argument('--show', action='store_true', help='should show generated pixelated image (default false)')
+
+    args = parser.parse_args()
+
+    for input_file in args.input_files:
+        outputFile = f'{os.path.splitext(input_file)[0]}.dxf'
+        print(f'generating pixel art on input image {input_file} writing output dxf file to {outputFile}')
+
+        (img_original, img_grayscale, img_pixelated) = prepare_images(input_file)
+        generate_dxf(img_pixelated, outputFile)
+        if args.show == True:
+            show_output_images(img_original, img_grayscale, img_pixelated)
 
 def generate_dxf(pixel_values, output_file_path):
     import ezdxf
