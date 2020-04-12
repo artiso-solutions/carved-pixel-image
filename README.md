@@ -18,8 +18,15 @@ To test the source image one can define the commanline option `--imgsave` to sav
 
 
 # DXF Generation
+<img src="documentation/generated-pixel-dxf-artiso-logo.png" alt="Generated DXF with Circles - artiso logo" width="500"/>
 
 # Producing Art
+<img src="documentation/artiso-logo-production-mpcnc.jpg" alt="Progress during production on MPCNC - artiso logo" width="500"/>
+
+<img src="documentation/artiso-logo-plywood.jpg" alt="Finished result carved in plywood - artiso logo" width="500"/>
+
+
+<img src="documentation/artiso-logo-plywood-details.jpg" alt="Detail shot on carved result - artiso logo" width="500"/>
 
 # Tweaking the output
 
