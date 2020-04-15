@@ -37,12 +37,18 @@ def generate_dxf(pixel_values, output_file_path):
     msp.add_line((TARGET_WIDTH * MM_PER_PIXEL,TARGET_HEIGHT * MM_PER_PIXEL), (0,TARGET_HEIGHT * MM_PER_PIXEL))
     msp.add_line((0, TARGET_HEIGHT * MM_PER_PIXEL), (0,0))
     print(f' - draw {TARGET_WIDTH * TARGET_HEIGHT} circles with {MM_PER_PIXEL} mm per pixel')
+    total_length = 0
+
     for x in range(TARGET_WIDTH):
         for y in range(TARGET_HEIGHT):
             center = (x * MM_PER_PIXEL + MM_PER_PIXEL / 2, TARGET_HEIGHT * MM_PER_PIXEL - y * MM_PER_PIXEL - MM_PER_PIXEL / 2)
             gray_value = pixel_values[y, x]
             radius = (1 - gray_value) * MM_PER_PIXEL / 2
             msp.add_circle(center, radius)
+            length = 25 + (1 - gray_value) * 30
+            total_length += length
+
+    print(f'TOTAL LENGTH: {total_length}')
     print(f'write dxf to {output_file_path}')
     doc.saveas(output_file_path)
 
