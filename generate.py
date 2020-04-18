@@ -30,7 +30,7 @@ def main():
             generate_horizontal_band_dxf(img_pixelated, output_file_horizontal_band)
 
         if args.show == True:
-            show_output_images(img_original, img_grayscale, img_pixelated)
+            show_output_images(img_original, img_grayscale, img_pixelated, circles)
 
 def calculate_circles(pixel_values):
     print('calculate one circle for each pixel...')
@@ -69,11 +69,12 @@ def generate_circle_dxf(circles, output_file_path):
     doc.saveas(output_file_path)
     return circles
 
-def show_output_images(img_original, img_grayscale, img_pixelated):
+def show_output_images(img_original, img_grayscale, img_pixelated, circles):
+    from matplotlib.patches import Circle
     import matplotlib.pyplot as plt
 
     print('show images')
-    fig, axes = plt.subplots(2, 2, figsize=(16, 9))
+    fig, axes = plt.subplots(3, 2, figsize=(16, 9))
     ax = axes.ravel()
 
     ax[0].imshow(img_original)
@@ -84,6 +85,16 @@ def show_output_images(img_original, img_grayscale, img_pixelated):
     ax[2].set_title("Pixelated")
     ax[3].hist(img_pixelated.ravel(), bins=256, range=(0.0, 1.0), fc='k', ec='k')
     ax[3].set_title("Histogram Pixelated")
+
+    for (center, radius) in circles:
+        circle = Circle(center, radius)
+        circle.fill = False
+        ax[4].add_artist(circle)
+
+    ax[4].set_xlim(0, TARGET_WIDTH * MM_PER_PIXEL)
+    ax[4].set_ylim(0, TARGET_HEIGHT * MM_PER_PIXEL)
+    ax[4].set_title('Circles')
+    ax[4].set_aspect(1.0)
 
     fig.tight_layout()
     plt.show()
