@@ -31,7 +31,7 @@ def main():
 
         if not args.nodxf:
             generate_dxf_circles(circles, output_file_circle, generation_parameters)
-            generate_dxf_horizontal_bands(img_pixelated, output_file_horizontal_band)
+            generate_dxf_horizontal_bands(img_pixelated, output_file_horizontal_band, generation_parameters)
 
         if args.show == True:
             show_output_images(img_original, img_grayscale, img_pixelated, circles)
