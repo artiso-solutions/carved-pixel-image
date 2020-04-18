@@ -23,17 +23,31 @@ def main():
 
         (img_original, img_grayscale, img_pixelated) = prepare_images(input_file, args.imgsave)
       
+        circles = calculate_circles(img_pixelated)
+
         if not args.nodxf:
-            generate_circle_dxf(img_pixelated, output_file_circle)
+            generate_circle_dxf(circles, output_file_circle)
             generate_horizontal_band_dxf(img_pixelated, output_file_horizontal_band)
 
         if args.show == True:
             show_output_images(img_original, img_grayscale, img_pixelated)
 
+def calculate_circles(pixel_values):
+    print('calculate one circle for each pixel...')
+    circles = []
+    for x in range(TARGET_WIDTH):
+        for y in range(TARGET_HEIGHT):
+            center = (x * MM_PER_PIXEL + MM_PER_PIXEL / 2, TARGET_HEIGHT * MM_PER_PIXEL - y * MM_PER_PIXEL - MM_PER_PIXEL / 2)
+            gray_value = pixel_values[y, x]
+            radius = (1 - gray_value) * MM_PER_PIXEL / 2
+            circles.append((center, radius))
+    print(f' - calculated {len(circles)} circles')
+    return circles
+
 def generate_horizontal_band_dxf(pixel_values, output_file_path):
     print('generate horizontal band dxf...')
 
-def generate_circle_dxf(pixel_values, output_file_path):
+def generate_circle_dxf(circles, output_file_path):
     import ezdxf
 
     print('writing dxf output...')
@@ -46,14 +60,14 @@ def generate_circle_dxf(pixel_values, output_file_path):
     msp.add_line((TARGET_WIDTH * MM_PER_PIXEL,TARGET_HEIGHT * MM_PER_PIXEL), (0,TARGET_HEIGHT * MM_PER_PIXEL))
     msp.add_line((0, TARGET_HEIGHT * MM_PER_PIXEL), (0,0))
     print(f' - draw {TARGET_WIDTH * TARGET_HEIGHT} circles with {MM_PER_PIXEL} mm per pixel')
-    for x in range(TARGET_WIDTH):
-        for y in range(TARGET_HEIGHT):
-            center = (x * MM_PER_PIXEL + MM_PER_PIXEL / 2, TARGET_HEIGHT * MM_PER_PIXEL - y * MM_PER_PIXEL - MM_PER_PIXEL / 2)
-            gray_value = pixel_values[y, x]
-            radius = (1 - gray_value) * MM_PER_PIXEL / 2
-            msp.add_circle(center, radius)
+
+    for circle in circles:
+        (center, radius) = circle
+        msp.add_circle(center, radius)
+        
     print(f'write dxf to {output_file_path}')
     doc.saveas(output_file_path)
+    return circles
 
 def show_output_images(img_original, img_grayscale, img_pixelated):
     import matplotlib.pyplot as plt

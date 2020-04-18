@@ -5,6 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: generate.py artiso logo",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/generate.py",
+            "args" : ["--show", "./test-data/artiso.png"]
+        },
+        {
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
