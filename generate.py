@@ -1,5 +1,8 @@
 import numpy as np
 import os
+from generation_parameters import GenerationParameters
+from generate_dxf import generate_dxf_circles, generate_dxf_horizontal_bands
+from helper import chunks
 
 TARGET_WIDTH = 80
 TARGET_HEIGHT = 45
@@ -21,13 +24,15 @@ def main():
         output_file_horizontal_band = f'{os.path.splitext(input_file)[0]}_horizontal_band.dxf'
         print(f'generating pixel art on input image {input_file} writing output dxf files')
 
+        generation_parameters = GenerationParameters(TARGET_WIDTH, TARGET_HEIGHT, MM_PER_PIXEL)
+
         (img_original, img_grayscale, img_pixelated) = prepare_images(input_file, args.imgsave)
       
         circles = calculate_circles(img_pixelated)
 
         if not args.nodxf:
-            generate_circle_dxf(circles, output_file_circle)
-            generate_horizontal_band_dxf(img_pixelated, output_file_horizontal_band)
+            generate_dxf_circles(circles, output_file_circle, generation_parameters)
+            generate_dxf_horizontal_bands(circles, output_file_horizontal_band, generation_parameters)
 
         if args.show == True:
             show_output_images(img_original, img_grayscale, img_pixelated, circles)
@@ -35,8 +40,8 @@ def main():
 def calculate_circles(pixel_values):
     print('calculate one circle for each pixel...')
     circles = []
-    for x in range(TARGET_WIDTH):
-        for y in range(TARGET_HEIGHT):
+    for y in range(TARGET_HEIGHT):
+        for x in range(TARGET_WIDTH):
             center = (x * MM_PER_PIXEL + MM_PER_PIXEL / 2, TARGET_HEIGHT * MM_PER_PIXEL - y * MM_PER_PIXEL - MM_PER_PIXEL / 2)
             gray_value = pixel_values[y, x]
             radius = (1 - gray_value) * MM_PER_PIXEL / 2
@@ -44,33 +49,51 @@ def calculate_circles(pixel_values):
     print(f' - calculated {len(circles)} circles')
     return circles
 
-def generate_horizontal_band_dxf(pixel_values, output_file_path):
-    print('generate horizontal band dxf...')
 
-def generate_circle_dxf(circles, output_file_path):
-    import ezdxf
 
-    print('writing dxf output...')
-    doc = ezdxf.new(dxfversion='R2010')
-    msp = doc.modelspace()
+def plot_circles(ax, circles):
+    from matplotlib.patches import Circle
+    for (center, radius) in circles:
+        circle = Circle(center, radius)
+        circle.fill = False
+        ax.add_artist(circle)
 
-    print(' - draw outer box')
-    msp.add_line((0,0), (TARGET_WIDTH * MM_PER_PIXEL,0))
-    msp.add_line((TARGET_WIDTH * MM_PER_PIXEL,0), (TARGET_WIDTH * MM_PER_PIXEL, TARGET_HEIGHT * MM_PER_PIXEL))
-    msp.add_line((TARGET_WIDTH * MM_PER_PIXEL,TARGET_HEIGHT * MM_PER_PIXEL), (0,TARGET_HEIGHT * MM_PER_PIXEL))
-    msp.add_line((0, TARGET_HEIGHT * MM_PER_PIXEL), (0,0))
-    print(f' - draw {TARGET_WIDTH * TARGET_HEIGHT} circles with {MM_PER_PIXEL} mm per pixel')
+    ax.set_xlim(0, TARGET_WIDTH * MM_PER_PIXEL)
+    ax.set_ylim(0, TARGET_HEIGHT * MM_PER_PIXEL)
+    ax.set_title('Circles')
+    ax.set_aspect(1.0)
 
-    for circle in circles:
-        (center, radius) = circle
-        msp.add_circle(center, radius)
-        
-    print(f'write dxf to {output_file_path}')
-    doc.saveas(output_file_path)
-    return circles
+def plot_horizontal_band(ax, circles):
+    from scipy import interpolate
+
+    points = [(center[0], center[1] + radius*0.8) for (center, radius) in circles]
+    point_rows = chunks(points, TARGET_WIDTH)
+
+    for point_row in point_rows:
+        point_data = np.array(point_row)
+        tck,u = interpolate.splprep(point_data.transpose(), s=0)
+        unew = np.arange(0, 1.01, 0.01)
+        out = interpolate.splev(unew, tck)
+
+        ax.plot(out[0], out[1], color='black')
+
+    points = [(center[0], center[1] - radius*0.8) for (center, radius) in circles]
+    point_rows = chunks(points, TARGET_WIDTH)
+
+    for point_row in point_rows:
+        point_data = np.array(point_row)
+        tck,u = interpolate.splprep(point_data.transpose(), s=0)
+        unew = np.arange(0, 1.01, 0.01)
+        out = interpolate.splev(unew, tck)
+
+        ax.plot(out[0], out[1], color='black')
+
+    ax.set_xlim(0, TARGET_WIDTH * MM_PER_PIXEL)
+    ax.set_ylim(0, TARGET_HEIGHT * MM_PER_PIXEL)
+    ax.set_title('Horizontal Bands')
+    ax.set_aspect(1.0)
 
 def show_output_images(img_original, img_grayscale, img_pixelated, circles):
-    from matplotlib.patches import Circle
     import matplotlib.pyplot as plt
 
     print('show images')
@@ -86,15 +109,8 @@ def show_output_images(img_original, img_grayscale, img_pixelated, circles):
     ax[3].hist(img_pixelated.ravel(), bins=256, range=(0.0, 1.0), fc='k', ec='k')
     ax[3].set_title("Histogram Pixelated")
 
-    for (center, radius) in circles:
-        circle = Circle(center, radius)
-        circle.fill = False
-        ax[4].add_artist(circle)
-
-    ax[4].set_xlim(0, TARGET_WIDTH * MM_PER_PIXEL)
-    ax[4].set_ylim(0, TARGET_HEIGHT * MM_PER_PIXEL)
-    ax[4].set_title('Circles')
-    ax[4].set_aspect(1.0)
+    plot_circles(ax[4], circles)
+    plot_horizontal_band(ax[5], circles)
 
     fig.tight_layout()
     plt.show()

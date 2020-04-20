@@ -20,29 +20,43 @@ To test the source image one can define the commanline option `--imgsave` to sav
 
 
 # DXF Generation
-In order to carve the pixel art with a CNC router we need some way to generate the gcode. As an intermediate step we choose to generate a dxf file with the outline of the image and the pixles as circles with appropriate radius. For the dxf generation we are importing [ezdxf](https://pypi.org/project/ezdxf/). 
+In order to carve the pixel art with a CNC router we need some way to generate the gcode. As an intermediate step we choose to generate a dxf file with the outline of the carves. For the dxf generation we are using [ezdxf](https://pypi.org/project/ezdxf/). 
+
+Both following variants are generated in based on the same parameters. The dxf files are suffixed with `_circle.dxf` / `_horizontal_band.dxf`.
+
+## One Circle per Pixel
+For this variant we are converting the pixel images to a grid of circles. Each pixel is represented by one circle and the radius of this circle is determined by the gray value of the pixel.
 
 <img src="documentation/generated-pixel-dxf-artiso-logo.png" alt="Generated DXF with Circles - artiso logo" width="500"/>
 
 Showing this dxf in a CAM program helps deciding if the source image is well prepared for carving in wood.
 
+## One Carved Horizontal Line for All Pixels in One Row
+With the second variant we are converting the pixel image to horizontal bands. Each row of pixels is represented by a band where the width of each pixel is determined by the gray value of the pixel. The bands can then be carved with a router.
+
+<img src="documentation/generated-bands-dxf-artiso-logo.png" alt="Generated DXF with horizontal bands - artiso logo" width="500"/>
+
 # Producing Art
 The generated dxf can be used to create the toolpaths in any CAM program. For the MPCNC we use [Estlcam](https://www.estlcam.de/). It is very easy to import the dxf and let Estlcam autogenerate the carvings. For the artiso logo we chose to use a 90° engraving bit. The processing of the image can take some minutes depending on the number of circles. After generating the carvings for closed paths one can tweek the parameters of the carvings. We decided to limit the depth to 1.5 mm which looks pretty good. Feel free to play around with the parameters to create a good result for your case.
 
-During processing of the gcode it looks very interesting, as the router takes several passes in almost random order. That might be some way for improvement to generate gcoe based on some templates by ourselves and optimiye the processing order.
+During processing of the gcode it looks very interesting, as the router takes several passes in almost random order. That might be some way for improvement to generate gcoe based on some templates by ourselves and optimize the processing order.
 
 <img src="documentation/artiso-logo-production-mpcnc.jpg" alt="Progress during production on MPCNC - artiso logo" width="500"/>
 
 The result of the artiso logo carved in plywood on our MPCNC after cutting down the plywood (we engraved the bounding box as guide for cutting) looks very pleasent for us. We are happy with the result.
 
-<img src="documentation/artiso-logo-plywood.jpg" alt="Finished result carved in plywood - artiso logo" width="500"/>
+<img src="documentation/artiso-logos-plywood.jpg" alt="Finished result carved in plywood - artiso logo" width="500"/>
 
 
-<img src="documentation/artiso-logo-plywood-details.jpg" alt="Detail shot on carved result - artiso logo" width="500"/>
+<img src="documentation/artiso-logos-plywood-details.jpg" alt="Detail shot on carved result - artiso logo" width="500"/>
 
 # Future Optimization
 There are some simple improvements waiting for implementation:
  - [ ] Packaging of library for reuse
  - [ ] Narrow down pixel values for more control over pixel radius
  - [ ] Define image size via commandline
- - [ ] Add more variations like one stick per pixel with different length based on pixel value
+ 
+ Add more variations:
+ - [x] horizontal band per row of pixels
+ - [ ] one stick per pixel with different length based on pixel value
+ - [ ] horinzontal lines with y-axis translation based on pixel value
