@@ -2,6 +2,7 @@ import numpy as np
 import os
 from generation_parameters import GenerationParameters
 from generate_dxf import generate_dxf_circles, generate_dxf_horizontal_bands
+from helper import chunks
 
 TARGET_WIDTH = 80
 TARGET_HEIGHT = 45
@@ -31,7 +32,7 @@ def main():
 
         if not args.nodxf:
             generate_dxf_circles(circles, output_file_circle, generation_parameters)
-            generate_dxf_horizontal_bands(img_pixelated, output_file_horizontal_band, generation_parameters)
+            generate_dxf_horizontal_bands(circles, output_file_horizontal_band, generation_parameters)
 
         if args.show == True:
             show_output_images(img_original, img_grayscale, img_pixelated, circles)
@@ -61,11 +62,6 @@ def plot_circles(ax, circles):
     ax.set_ylim(0, TARGET_HEIGHT * MM_PER_PIXEL)
     ax.set_title('Circles')
     ax.set_aspect(1.0)
-
-def chunks(lst, n):
-    """Yield successive n-sized chunks from lst."""
-    for i in range(0, len(lst), n):
-        yield lst[i:i + n]
 
 def plot_horizontal_band(ax, circles):
     from scipy import interpolate
