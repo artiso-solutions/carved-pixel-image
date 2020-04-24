@@ -12,10 +12,10 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description='Generate pixel art dxf for input image.')
-    parser.add_argument('input_files', metavar='image', nargs='+', help='input images for processing')
     parser.add_argument('width', help='the width of the image in mm', type=int)
     parser.add_argument('height', help='the height of the image in mm', type=int)
     parser.add_argument('mm_per_pixel', help='the size of one pixel in mm', type=int)
+    parser.add_argument('input_files', metavar='image', nargs='+', help='input images for processing')
     parser.add_argument('--show', action='store_true', help='should show generated pixelated image (default false)')
     parser.add_argument('--imgsave', action='store_true', help='save intermediate images (default false)')
     parser.add_argument('--nodxf', action='store_true', help='do not generate dxf file (default false)')
