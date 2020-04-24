@@ -44,6 +44,20 @@ def generate_dxf_circles(circles, output_file_path, generation_parameters):
     print(f'write dxf to {output_file_path}')
     doc.saveas(output_file_path)
 
+def generate_dxf_stick_circles(sticks, output_file_path, generation_parameters):
+    doc,msp = _create_dxf_file()
+
+    _plot_bounding_box(msp, generation_parameters)
+    
+    print(f' - draw {generation_parameters.target_width * generation_parameters.target_height} circles with {generation_parameters.mm_per_pixel} mm per pixel')
+
+    for stick in sticks:
+        (center, radius, _) = stick
+        msp.add_circle(center, radius)
+        
+    print(f'write dxf to {output_file_path}')
+    doc.saveas(output_file_path)
+
 def _create_dxf_file():
     print('writing dxf output...')
     doc = ezdxf.new(dxfversion='R2010')

@@ -1,7 +1,7 @@
 import numpy as np
 import os
 from generation_parameters import GenerationParameters
-from generate_dxf import generate_dxf_circles, generate_dxf_horizontal_bands
+from generate_dxf import generate_dxf_circles, generate_dxf_horizontal_bands, generate_dxf_stick_circles
 from helper import chunks
 
 # generation_parameters.target_width = 80
@@ -19,6 +19,9 @@ def main():
     parser.add_argument('--show', action='store_true', help='should show generated pixelated image (default false)')
     parser.add_argument('--imgsave', action='store_true', help='save intermediate images (default false)')
     parser.add_argument('--nodxf', action='store_true', help='do not generate dxf file (default false)')
+    parser.add_argument('--stick_radius', help='the size of one stick in mm', type=int, default=0)
+    parser.add_argument('--stick_min_length', help='the length of a stick representing black value in mm', type=int, default=25)
+    parser.add_argument('--stick_usage_length', help='the variable part of stick length in mm', type=int, default=30)
 
     args = parser.parse_args()
     generation_parameters = GenerationParameters(int(args.width / args.mm_per_pixel), int(args.height / args.mm_per_pixel), args.mm_per_pixel)
@@ -26,16 +29,18 @@ def main():
     for input_file in args.input_files:
         output_file_circle = f'{os.path.splitext(input_file)[0]}_circle.dxf'
         output_file_horizontal_band = f'{os.path.splitext(input_file)[0]}_horizontal_band.dxf'
+        output_file_sticks = f'{os.path.splitext(input_file)[0]}_sticks.dxf'
         print(f'generating pixel art on input image {input_file} writing output dxf files')
 
         (img_original, img_grayscale, img_pixelated) = prepare_images(input_file, args.imgsave, generation_parameters)
       
         circles = calculate_circles(img_pixelated, generation_parameters)
-        sticks = calculate_sticks(img_pixelated, args.mm_per_pixel, generation_parameters)
+        sticks = calculate_sticks(img_pixelated, args.mm_per_pixel, generation_parameters, args.stick_radius, args.stick_min_length, args.stick_usage_length)
 
         if not args.nodxf:
             generate_dxf_circles(circles, output_file_circle, generation_parameters)
             generate_dxf_horizontal_bands(circles, output_file_horizontal_band, generation_parameters)
+            generate_dxf_stick_circles(sticks, output_file_sticks, generation_parameters)
 
         if args.show == True:
             show_output_images(img_original, img_grayscale, img_pixelated, circles, generation_parameters)
@@ -52,18 +57,23 @@ def calculate_circles(pixel_values, generation_parameters):
     print(f' - calculated {len(circles)} circles')
     return circles
 
-def calculate_sticks(pixel_values, radius, generation_parameters):
+def calculate_sticks(pixel_values, radius, generation_parameters, stick_radius, stick_min_length, stick_usage_length):
     print('calculate one stick for each pixel...')
     sticks = []
     total_length = 0
+
+    radius = generation_parameters.mm_per_pixel
+    if stick_radius > 0:
+        radius = stick_radius
+    
     for y in range(generation_parameters.target_height):
         for x in range(generation_parameters.target_width):
             center = (x * generation_parameters.mm_per_pixel + generation_parameters.mm_per_pixel / 2, generation_parameters.target_height * generation_parameters.mm_per_pixel - y * generation_parameters.mm_per_pixel - generation_parameters.mm_per_pixel / 2)
             gray_value = pixel_values[y, x]
-            length = 25 + (1 - gray_value) * 30
+            length = stick_min_length + (1 - gray_value) * stick_usage_length
             sticks.append((center, radius, length))
             total_length += length
-    print(f' - calculated {len(sticks)} stick lengths')
+    print(f' - calculated {len(sticks)} stick lengths with total length of {total_length} mm')
     return sticks
 
 def plot_circles(ax, circles, generation_parameters):
