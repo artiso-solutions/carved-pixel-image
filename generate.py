@@ -1,7 +1,7 @@
 import numpy as np
 import os
 from generation_parameters import GenerationParameters
-from generate_dxf import generate_dxf_circles, generate_dxf_horizontal_bands, generate_dxf_stick_circles
+from generate_dxf import generate_dxf_circles, generate_dxf_horizontal_bands, generate_dxf_stick_circles, write_stick_length_file
 from helper import chunks
 
 # generation_parameters.target_width = 80
@@ -30,6 +30,7 @@ def main():
         output_file_circle = f'{os.path.splitext(input_file)[0]}_circle.dxf'
         output_file_horizontal_band = f'{os.path.splitext(input_file)[0]}_horizontal_band.dxf'
         output_file_sticks = f'{os.path.splitext(input_file)[0]}_sticks.dxf'
+        output_file_stick_lengths = f'{os.path.splitext(input_file)[0]}_sticks.txt'
         print(f'generating pixel art on input image {input_file} writing output dxf files')
 
         (img_original, img_grayscale, img_pixelated) = prepare_images(input_file, args.imgsave, generation_parameters)
@@ -41,6 +42,7 @@ def main():
             generate_dxf_circles(circles, output_file_circle, generation_parameters)
             generate_dxf_horizontal_bands(circles, output_file_horizontal_band, generation_parameters)
             generate_dxf_stick_circles(sticks, output_file_sticks, generation_parameters)
+            write_stick_length_file(sticks, output_file_stick_lengths)
 
         if args.show == True:
             show_output_images(img_original, img_grayscale, img_pixelated, circles, generation_parameters)
