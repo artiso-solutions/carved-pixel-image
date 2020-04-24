@@ -1,62 +1,118 @@
 import numpy as np
 import os
+from generation_parameters import GenerationParameters
+from generate_dxf import generate_dxf_circles, generate_dxf_horizontal_bands
+from helper import chunks
 
-TARGET_WIDTH = 80
-TARGET_HEIGHT = 45
-MM_PER_PIXEL = 6
+# generation_parameters.target_width = 80
+# generation_parameters.target_height = 45
+# generation_parameters.mm_per_pixel = 6
 
 def main():
     import argparse
 
     parser = argparse.ArgumentParser(description='Generate pixel art dxf for input image.')
     parser.add_argument('input_files', metavar='image', nargs='+', help='input images for processing')
+    parser.add_argument('width', help='the width of the image in mm', type=int)
+    parser.add_argument('height', help='the height of the image in mm', type=int)
+    parser.add_argument('mm_per_pixel', help='the size of one pixel in mm', type=int)
     parser.add_argument('--show', action='store_true', help='should show generated pixelated image (default false)')
     parser.add_argument('--imgsave', action='store_true', help='save intermediate images (default false)')
+    parser.add_argument('--nodxf', action='store_true', help='do not generate dxf file (default false)')
 
     args = parser.parse_args()
+    generation_parameters = GenerationParameters(int(args.width / args.mm_per_pixel), int(args.height / args.mm_per_pixel), args.mm_per_pixel)
 
     for input_file in args.input_files:
-        outputFile = f'{os.path.splitext(input_file)[0]}.dxf'
-        print(f'generating pixel art on input image {input_file} writing output dxf file to {outputFile}')
+        output_file_circle = f'{os.path.splitext(input_file)[0]}_circle.dxf'
+        output_file_horizontal_band = f'{os.path.splitext(input_file)[0]}_horizontal_band.dxf'
+        print(f'generating pixel art on input image {input_file} writing output dxf files')
 
-        (img_original, img_grayscale, img_pixelated) = prepare_images(input_file, args.imgsave)
-        generate_dxf(img_pixelated, outputFile)
+        (img_original, img_grayscale, img_pixelated) = prepare_images(input_file, args.imgsave, generation_parameters)
+      
+        circles = calculate_circles(img_pixelated, generation_parameters)
+        sticks = calculate_sticks(img_pixelated, args.mm_per_pixel, generation_parameters)
+
+        if not args.nodxf:
+            generate_dxf_circles(circles, output_file_circle, generation_parameters)
+            generate_dxf_horizontal_bands(circles, output_file_horizontal_band, generation_parameters)
+
         if args.show == True:
-            show_output_images(img_original, img_grayscale, img_pixelated)
+            show_output_images(img_original, img_grayscale, img_pixelated, circles, generation_parameters)
 
-def generate_dxf(pixel_values, output_file_path):
-    import ezdxf
-
-    print('writing dxf output...')
-    doc = ezdxf.new(dxfversion='R2010')
-    msp = doc.modelspace()
-
-    print(' - draw outer box')
-    msp.add_line((0,0), (TARGET_WIDTH * MM_PER_PIXEL,0))
-    msp.add_line((TARGET_WIDTH * MM_PER_PIXEL,0), (TARGET_WIDTH * MM_PER_PIXEL, TARGET_HEIGHT * MM_PER_PIXEL))
-    msp.add_line((TARGET_WIDTH * MM_PER_PIXEL,TARGET_HEIGHT * MM_PER_PIXEL), (0,TARGET_HEIGHT * MM_PER_PIXEL))
-    msp.add_line((0, TARGET_HEIGHT * MM_PER_PIXEL), (0,0))
-    print(f' - draw {TARGET_WIDTH * TARGET_HEIGHT} circles with {MM_PER_PIXEL} mm per pixel')
-    total_length = 0
-
-    for x in range(TARGET_WIDTH):
-        for y in range(TARGET_HEIGHT):
-            center = (x * MM_PER_PIXEL + MM_PER_PIXEL / 2, TARGET_HEIGHT * MM_PER_PIXEL - y * MM_PER_PIXEL - MM_PER_PIXEL / 2)
+def calculate_circles(pixel_values, generation_parameters):
+    print('calculate one circle for each pixel...')
+    circles = []
+    for y in range(generation_parameters.target_height):
+        for x in range(generation_parameters.target_width):
+            center = (x * generation_parameters.mm_per_pixel + generation_parameters.mm_per_pixel / 2, generation_parameters.target_height * generation_parameters.mm_per_pixel - y * generation_parameters.mm_per_pixel - generation_parameters.mm_per_pixel / 2)
             gray_value = pixel_values[y, x]
-            radius = (1 - gray_value) * MM_PER_PIXEL / 2
-            msp.add_circle(center, radius)
+            radius = (1 - gray_value) * generation_parameters.mm_per_pixel / 2
+            circles.append((center, radius))
+    print(f' - calculated {len(circles)} circles')
+    return circles
+
+def calculate_sticks(pixel_values, radius, generation_parameters):
+    print('calculate one stick for each pixel...')
+    sticks = []
+    total_length = 0
+    for y in range(generation_parameters.target_height):
+        for x in range(generation_parameters.target_width):
+            center = (x * generation_parameters.mm_per_pixel + generation_parameters.mm_per_pixel / 2, generation_parameters.target_height * generation_parameters.mm_per_pixel - y * generation_parameters.mm_per_pixel - generation_parameters.mm_per_pixel / 2)
+            gray_value = pixel_values[y, x]
             length = 25 + (1 - gray_value) * 30
+            sticks.append((center, radius, length))
             total_length += length
+    print(f' - calculated {len(sticks)} stick lengths')
+    return sticks
 
-    print(f'TOTAL LENGTH: {total_length}')
-    print(f'write dxf to {output_file_path}')
-    doc.saveas(output_file_path)
+def plot_circles(ax, circles, generation_parameters):
+    from matplotlib.patches import Circle
+    for (center, radius) in circles:
+        circle = Circle(center, radius)
+        circle.fill = False
+        ax.add_artist(circle)
 
-def show_output_images(img_original, img_grayscale, img_pixelated):
+    ax.set_xlim(0, generation_parameters.target_width * generation_parameters.mm_per_pixel)
+    ax.set_ylim(0, generation_parameters.target_height * generation_parameters.mm_per_pixel)
+    ax.set_title('Circles')
+    ax.set_aspect(1.0)
+
+def plot_horizontal_band(ax, circles, generation_parameters):
+    from scipy import interpolate
+
+    points = [(center[0], center[1] + radius*0.8) for (center, radius) in circles]
+    point_rows = chunks(points, generation_parameters.target_width)
+
+    for point_row in point_rows:
+        point_data = np.array(point_row)
+        tck,u = interpolate.splprep(point_data.transpose(), s=0)
+        unew = np.arange(0, 1.01, 0.01)
+        out = interpolate.splev(unew, tck)
+
+        ax.plot(out[0], out[1], color='black')
+
+    points = [(center[0], center[1] - radius*0.8) for (center, radius) in circles]
+    point_rows = chunks(points, generation_parameters.target_width)
+
+    for point_row in point_rows:
+        point_data = np.array(point_row)
+        tck,u = interpolate.splprep(point_data.transpose(), s=0)
+        unew = np.arange(0, 1.01, 0.01)
+        out = interpolate.splev(unew, tck)
+
+        ax.plot(out[0], out[1], color='black')
+
+    ax.set_xlim(0, generation_parameters.target_width * generation_parameters.mm_per_pixel)
+    ax.set_ylim(0, generation_parameters.target_height * generation_parameters.mm_per_pixel)
+    ax.set_title('Horizontal Bands')
+    ax.set_aspect(1.0)
+
+def show_output_images(img_original, img_grayscale, img_pixelated, circles, generation_parameters):
     import matplotlib.pyplot as plt
 
     print('show images')
-    fig, axes = plt.subplots(1, 3, figsize=(8, 4))
+    fig, axes = plt.subplots(3, 2, figsize=(16, 9))
     ax = axes.ravel()
 
     ax[0].imshow(img_original)
@@ -65,11 +121,16 @@ def show_output_images(img_original, img_grayscale, img_pixelated):
     ax[1].set_title("Grayscale")
     ax[2].imshow(img_pixelated, cmap=plt.cm.gray)
     ax[2].set_title("Pixelated")
+    ax[3].hist(img_pixelated.ravel(), bins=256, range=(0.0, 1.0), fc='k', ec='k')
+    ax[3].set_title("Histogram Pixelated")
+
+    plot_circles(ax[4], circles, generation_parameters)
+    plot_horizontal_band(ax[5], circles, generation_parameters)
 
     fig.tight_layout()
     plt.show()
 
-def prepare_images(input_file_path, save_temp_images):
+def prepare_images(input_file_path, save_temp_images, generation_parameters):
     from skimage import io
     from skimage import data
     from skimage.color import rgb2gray
@@ -80,8 +141,8 @@ def prepare_images(input_file_path, save_temp_images):
     img_original = io.imread(input_file_path)
     print(' - transform to grayscale')
     img_grayscale = rgb2gray(img_original)
-    print(f' - resize from {img_original.shape[1]}x{img_original.shape[0]} to {TARGET_WIDTH}x{TARGET_HEIGHT}')
-    img_pixelated = resize(img_grayscale, (TARGET_HEIGHT, TARGET_WIDTH))
+    print(f' - resize from {img_original.shape[1]}x{img_original.shape[0]} to {generation_parameters.target_width}x{generation_parameters.target_height}')
+    img_pixelated = resize(img_grayscale, (generation_parameters.target_height, generation_parameters.target_width))
     
 
     if save_temp_images:
