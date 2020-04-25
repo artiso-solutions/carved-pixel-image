@@ -22,6 +22,7 @@ def main():
     parser.add_argument('--stick_radius', help='the size of one stick in mm', type=int, default=0)
     parser.add_argument('--stick_min_length', help='the length of a stick representing black value in mm', type=int, default=25)
     parser.add_argument('--stick_usage_length', help='the variable part of stick length in mm', type=int, default=30)
+    parser.add_argument('--stick_length_jig_offset', help='the offset of the stick length in mm for your jig', type=int, default=0)
 
     args = parser.parse_args()
     generation_parameters = GenerationParameters(int(args.width / args.mm_per_pixel), int(args.height / args.mm_per_pixel), args.mm_per_pixel)
@@ -36,7 +37,7 @@ def main():
         (img_original, img_grayscale, img_pixelated) = prepare_images(input_file, args.imgsave, generation_parameters)
       
         circles = calculate_circles(img_pixelated, generation_parameters)
-        sticks = calculate_sticks(img_pixelated, args.mm_per_pixel, generation_parameters, args.stick_radius, args.stick_min_length, args.stick_usage_length)
+        sticks = calculate_sticks(img_pixelated, args.mm_per_pixel, generation_parameters, args.stick_radius, args.stick_min_length, args.stick_usage_length, args.stick_length_jig_offset)
 
         if not args.nodxf:
             generate_dxf_circles(circles, output_file_circle, generation_parameters)
@@ -59,7 +60,7 @@ def calculate_circles(pixel_values, generation_parameters):
     print(f' - calculated {len(circles)} circles')
     return circles
 
-def calculate_sticks(pixel_values, radius, generation_parameters, stick_radius, stick_min_length, stick_usage_length):
+def calculate_sticks(pixel_values, radius, generation_parameters, stick_radius, stick_min_length, stick_usage_length, stick_length_jig_offset):
     print('calculate one stick for each pixel...')
     sticks = []
     total_length = 0
@@ -73,7 +74,7 @@ def calculate_sticks(pixel_values, radius, generation_parameters, stick_radius, 
             center = (x * generation_parameters.mm_per_pixel + generation_parameters.mm_per_pixel / 2, generation_parameters.target_height * generation_parameters.mm_per_pixel - y * generation_parameters.mm_per_pixel - generation_parameters.mm_per_pixel / 2)
             gray_value = pixel_values[y, x]
             length = stick_min_length + (1 - gray_value) * stick_usage_length
-            sticks.append((center, radius, length))
+            sticks.append((center, radius, length - stick_length_jig_offset))
             total_length += length
     print(f' - calculated {len(sticks)} stick lengths with total length of {total_length} mm')
     return sticks

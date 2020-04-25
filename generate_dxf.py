@@ -63,7 +63,7 @@ def write_stick_length_file(sticks, output_file_path):
     with open(output_file_path, 'w+') as file: 
         for stick in sticks:
             (center, _, length) = stick
-            file.write(f'{center[0]:.1f}x{center[1]:.1f} - {length:.2f}\n')
+            file.write(f'{center[0]:3.0f}x{center[1]:3.0f} - {length:2.0f}\n')
 
 def _create_dxf_file():
     print('writing dxf output...')
