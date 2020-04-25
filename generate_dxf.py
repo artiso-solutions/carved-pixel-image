@@ -1,17 +1,18 @@
 import ezdxf
 from helper import chunks
+from configuration import Configuration
 
-def generate_dxf_horizontal_bands(circles, output_file_path, generation_parameters):
+def generate_dxf_horizontal_bands(circles, output_file_path, configuration : Configuration):
     print('generate horizontal band dxf...')
     doc,msp = _create_dxf_file()
 
-    _plot_bounding_box(msp, generation_parameters)
+    _plot_bounding_box(msp, configuration)
 
     radius_weight_x = 0.5
     radius_weight_y = 1
 
     points = [((center[0] + radius * radius_weight_x, center[1] + radius * radius_weight_y), (center[0] - radius * radius_weight_x, center[1] - radius * radius_weight_y)) for (center, radius) in circles]
-    point_rows = chunks(points, generation_parameters.target_width)
+    point_rows = chunks(points, configuration.width)
     for point_row in point_rows:
         pairs = zip(point_row[0:-1], point_row[1:])
         for pair in pairs:
@@ -20,7 +21,7 @@ def generate_dxf_horizontal_bands(circles, output_file_path, generation_paramete
 
         first_pair = point_row[0]
         last_pair = point_row[-1]
-        width = generation_parameters.target_width * generation_parameters.mm_per_pixel
+        width = configuration.width * configuration.mmPerPixel
         msp.add_line((0, first_pair[0][1]), first_pair[0])
         msp.add_line((0, first_pair[1][1]), first_pair[1])
         msp.add_line((0, first_pair[0][1]), (0, first_pair[1][1]))
@@ -31,12 +32,12 @@ def generate_dxf_horizontal_bands(circles, output_file_path, generation_paramete
     print(f'write dxf to {output_file_path}')
     doc.saveas(output_file_path)
 
-def generate_dxf_circles(circles, output_file_path, generation_parameters):
+def generate_dxf_circles(circles, output_file_path, configuration):
     doc,msp = _create_dxf_file()
 
-    _plot_bounding_box(msp, generation_parameters)
+    _plot_bounding_box(msp, configuration)
     
-    print(f' - draw {generation_parameters.target_width * generation_parameters.target_height} circles with {generation_parameters.mm_per_pixel} mm per pixel')
+    print(f' - draw {configuration.width * configuration.height} circles with {configuration.mmPerPixel} mm per pixel')
 
     for circle in circles:
         (center, radius) = circle
@@ -45,12 +46,12 @@ def generate_dxf_circles(circles, output_file_path, generation_parameters):
     print(f'write dxf to {output_file_path}')
     doc.saveas(output_file_path)
 
-def generate_dxf_stick_circles(sticks, output_file_path, generation_parameters):
+def generate_dxf_stick_circles(sticks, output_file_path, configuration):
     doc,msp = _create_dxf_file()
 
-    _plot_bounding_box(msp, generation_parameters)
+    _plot_bounding_box(msp, configuration)
     
-    print(f' - draw {generation_parameters.target_width * generation_parameters.target_height} circles with {generation_parameters.mm_per_pixel} mm per pixel')
+    print(f' - draw {configuration.width * configuration.height} circles with {configuration.mmPerPixel} mm per pixel')
 
     for stick in sticks:
         (center, radius, _) = stick
@@ -73,10 +74,10 @@ def _create_dxf_file():
 
     return doc,msp
 
-def _plot_bounding_box(msp, generation_parameters):
+def _plot_bounding_box(msp, configuration):
     print(' - draw outer box')
-    width = generation_parameters.target_width * generation_parameters.mm_per_pixel + 2 * generation_parameters.margin_width
-    height = generation_parameters.target_height * generation_parameters.mm_per_pixel + 2 * generation_parameters.margin_height
+    width = configuration.width * configuration.mmPerPixel + 2 * configuration.margin.width
+    height = configuration.height * configuration.mmPerPixel + 2 * configuration.margin.height
     msp.add_line((0,0), (width,0))
     msp.add_line((width,0), (width, height))
     msp.add_line((width,height), (0,height))

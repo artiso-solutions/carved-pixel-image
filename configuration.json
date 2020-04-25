@@ -1,0 +1,39 @@
+[
+    {
+        "variant": "circle",
+        "width": 80,
+        "height": 40,
+        "mmPerPixel": 6,
+        "margin": {
+            "width": 0,
+            "height": 15
+        }
+    },
+    {
+        "variant": "band",
+        "width": 80,
+        "height": 40,
+        "mmPerPixel": 6,
+        "margin": {
+            "width": 0,
+            "height": 15
+        }
+    },
+    {
+        "variant": "stick",
+        "width": 48,
+        "height": 24,
+        "mmPerPixel": 10,
+        "margin": {
+            "width": 0,
+            "height": 15
+        },
+        "stick": {
+            "radius": 4,
+            "radiusCarveOffset": 0.5,
+            "minLength": 13,
+            "usageLength": 35,
+            "lengthJigOffset": 12
+        }
+    }
+]
