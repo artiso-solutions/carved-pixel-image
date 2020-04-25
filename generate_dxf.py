@@ -20,12 +20,13 @@ def generate_dxf_horizontal_bands(circles, output_file_path, generation_paramete
 
         first_pair = point_row[0]
         last_pair = point_row[-1]
+        width = generation_parameters.target_width * generation_parameters.mm_per_pixel
         msp.add_line((0, first_pair[0][1]), first_pair[0])
         msp.add_line((0, first_pair[1][1]), first_pair[1])
         msp.add_line((0, first_pair[0][1]), (0, first_pair[1][1]))
-        msp.add_line(last_pair[0], (generation_parameters.target_width * generation_parameters.mm_per_pixel, last_pair[0][1]))
-        msp.add_line(last_pair[1], (generation_parameters.target_width * generation_parameters.mm_per_pixel, last_pair[1][1]))
-        msp.add_line((generation_parameters.target_width * generation_parameters.mm_per_pixel, last_pair[0][1]), (generation_parameters.target_width * generation_parameters.mm_per_pixel, last_pair[1][1]))
+        msp.add_line(last_pair[0], (width, last_pair[0][1]))
+        msp.add_line(last_pair[1], (width, last_pair[1][1]))
+        msp.add_line((width, last_pair[0][1]), (width, last_pair[1][1]))
  
     print(f'write dxf to {output_file_path}')
     doc.saveas(output_file_path)
@@ -74,8 +75,10 @@ def _create_dxf_file():
 
 def _plot_bounding_box(msp, generation_parameters):
     print(' - draw outer box')
-    msp.add_line((0,0), (generation_parameters.target_width * generation_parameters.mm_per_pixel,0))
-    msp.add_line((generation_parameters.target_width * generation_parameters.mm_per_pixel,0), (generation_parameters.target_width * generation_parameters.mm_per_pixel, generation_parameters.target_height * generation_parameters.mm_per_pixel))
-    msp.add_line((generation_parameters.target_width * generation_parameters.mm_per_pixel,generation_parameters.target_height * generation_parameters.mm_per_pixel), (0,generation_parameters.target_height * generation_parameters.mm_per_pixel))
-    msp.add_line((0, generation_parameters.target_height * generation_parameters.mm_per_pixel), (0,0))
+    width = generation_parameters.target_width * generation_parameters.mm_per_pixel + 2 * generation_parameters.margin_width
+    height = generation_parameters.target_height * generation_parameters.mm_per_pixel + 2 * generation_parameters.margin_height
+    msp.add_line((0,0), (width,0))
+    msp.add_line((width,0), (width, height))
+    msp.add_line((width,height), (0,height))
+    msp.add_line((0, height), (0,0))
 

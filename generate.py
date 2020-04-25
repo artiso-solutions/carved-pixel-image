@@ -23,9 +23,16 @@ def main():
     parser.add_argument('--stick_min_length', help='the length of a stick representing black value in mm', type=int, default=25)
     parser.add_argument('--stick_usage_length', help='the variable part of stick length in mm', type=int, default=30)
     parser.add_argument('--stick_length_jig_offset', help='the offset of the stick length in mm for your jig', type=int, default=0)
+    parser.add_argument('--margin_width', help='the width of the margin in mm for the surrounding box', type=int, default=0)
+    parser.add_argument('--margin_height', help='the height of the margin in mm for the surrounding box', type=int, default=0)
 
     args = parser.parse_args()
-    generation_parameters = GenerationParameters(int(args.width / args.mm_per_pixel), int(args.height / args.mm_per_pixel), args.mm_per_pixel)
+    generation_parameters = GenerationParameters(
+        int(args.width / args.mm_per_pixel), 
+        int(args.height / args.mm_per_pixel), 
+        args.mm_per_pixel,
+        args.margin_width,
+        args.margin_height)
 
     for input_file in args.input_files:
         output_file_circle = f'{os.path.splitext(input_file)[0]}_circle.dxf'
@@ -48,12 +55,21 @@ def main():
         if args.show == True:
             show_output_images(img_original, img_grayscale, img_pixelated, circles, generation_parameters)
 
+def pixel_offset(v, offset):
+    return v + offset
+
 def calculate_circles(pixel_values, generation_parameters):
     print('calculate one circle for each pixel...')
     circles = []
+
+    total_height = generation_parameters.target_height * generation_parameters.mm_per_pixel + generation_parameters.margin_height
+
     for y in range(generation_parameters.target_height):
         for x in range(generation_parameters.target_width):
-            center = (x * generation_parameters.mm_per_pixel + generation_parameters.mm_per_pixel / 2, generation_parameters.target_height * generation_parameters.mm_per_pixel - y * generation_parameters.mm_per_pixel - generation_parameters.mm_per_pixel / 2)
+            center = (
+                pixel_offset(x * generation_parameters.mm_per_pixel + generation_parameters.mm_per_pixel / 2, generation_parameters.margin_width), 
+                total_height - y * generation_parameters.mm_per_pixel - generation_parameters.mm_per_pixel / 2
+            )
             gray_value = pixel_values[y, x]
             radius = (1 - gray_value) * generation_parameters.mm_per_pixel / 2
             circles.append((center, radius))
@@ -63,7 +79,9 @@ def calculate_circles(pixel_values, generation_parameters):
 def calculate_sticks(pixel_values, radius, generation_parameters, stick_radius, stick_min_length, stick_usage_length, stick_length_jig_offset):
     print('calculate one stick for each pixel...')
     sticks = []
-    total_length = 0
+    total_stick_length = 0
+
+    total_height = generation_parameters.target_height * generation_parameters.mm_per_pixel + generation_parameters.margin_height
 
     radius = generation_parameters.mm_per_pixel
     if stick_radius > 0:
@@ -71,12 +89,15 @@ def calculate_sticks(pixel_values, radius, generation_parameters, stick_radius, 
     
     for y in range(generation_parameters.target_height):
         for x in range(generation_parameters.target_width):
-            center = (x * generation_parameters.mm_per_pixel + generation_parameters.mm_per_pixel / 2, generation_parameters.target_height * generation_parameters.mm_per_pixel - y * generation_parameters.mm_per_pixel - generation_parameters.mm_per_pixel / 2)
+            center = (
+                pixel_offset(x * generation_parameters.mm_per_pixel + generation_parameters.mm_per_pixel / 2, generation_parameters.margin_width), 
+                total_height - y * generation_parameters.mm_per_pixel - generation_parameters.mm_per_pixel / 2
+            )
             gray_value = pixel_values[y, x]
             length = stick_min_length + (1 - gray_value) * stick_usage_length
             sticks.append((center, radius, length - stick_length_jig_offset))
-            total_length += length
-    print(f' - calculated {len(sticks)} stick lengths with total length of {total_length} mm')
+            total_stick_length += length
+    print(f' - calculated {len(sticks)} stick lengths with total length of {total_stick_length} mm')
     return sticks
 
 def plot_circles(ax, circles, generation_parameters):
