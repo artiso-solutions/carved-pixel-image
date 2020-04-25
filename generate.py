@@ -23,7 +23,7 @@ def main():
     configurations = load_configuration(args.configuration_file)
     for configuration in configurations:
         variant = configuration.variant
-
+        print(f'### using configuration {variant} producing {configuration.width} x {configuration.height} pixels with pixel size {configuration.mmPerPixel}mm ###')
         for input_file in args.input_files:
             output_file = f'{os.path.splitext(input_file)[0]}_{variant}.dxf'
             print(f'generating pixel art on input image {input_file} writing output dxf file')
@@ -55,6 +55,8 @@ def main():
                     write_stick_length_file(sticks, output_file_stick_lengths)
                 # if args.show == True:
                 #     show_output_images(img_original, img_grayscale, img_pixelated, circles, configuration)
+        
+        print()
 
 def pixel_offset(v, offset):
     return v + offset
