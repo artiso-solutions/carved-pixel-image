@@ -52,10 +52,11 @@ def generate_dxf_stick_circles(sticks, output_file_path, configuration):
     _plot_bounding_box(msp, configuration)
     
     print(f' - draw {configuration.width * configuration.height} circles with {configuration.mmPerPixel} mm per pixel')
-
+    stick_configuration = configuration.stick
+    radius_offset = stick_configuration.radiusCarveOffset
     for stick in sticks:
         (center, radius, _) = stick
-        msp.add_circle(center, radius)
+        msp.add_circle(center, radius + radius_offset)
         
     print(f'write dxf to {output_file_path}')
     doc.saveas(output_file_path)
