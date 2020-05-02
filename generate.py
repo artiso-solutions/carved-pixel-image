@@ -4,10 +4,6 @@ from generate_dxf import generate_dxf_circles, generate_dxf_horizontal_bands, ge
 from helper import chunks
 from configuration import load_configuration, Configuration, StickConfiguration, Margin
 
-# configuration.width = 80
-# generation_parameters.target_height = 45
-# configuration.mmPerPixel = 6
-
 def main():
     import argparse
 
@@ -126,7 +122,7 @@ def plot_horizontal_band(ax, circles, configuration):
 
     for point_row in point_rows:
         point_data = np.array(point_row)
-        tck,u = interpolate.splprep(point_data.transpose(), s=0)
+        tck,_ = interpolate.splprep(point_data.transpose(), s=0)
         unew = np.arange(0, 1.01, 0.01)
         out = interpolate.splev(unew, tck)
 
@@ -137,7 +133,7 @@ def plot_horizontal_band(ax, circles, configuration):
 
     for point_row in point_rows:
         point_data = np.array(point_row)
-        tck,u = interpolate.splprep(point_data.transpose(), s=0)
+        tck,_ = interpolate.splprep(point_data.transpose(), s=0)
         unew = np.arange(0, 1.01, 0.01)
         out = interpolate.splev(unew, tck)
 
