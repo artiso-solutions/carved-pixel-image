@@ -69,9 +69,9 @@ The speed up cutting the sticks in the correct length we created a jig for measu
 There are some simple improvements waiting for implementation:
  - [ ] Packaging of library for reuse
  - [ ] Narrow down pixel values for more control over pixel radius
- - [ ] Define image size via commandline
+ - [x] Define image size via configuration file
  
  Add more variations:
  - [x] horizontal band per row of pixels
  - [x] one stick per pixel with different length based on pixel value
- - [ ] horinzontal lines with y-axis translation based on pixel value
+ - [ ] horizontal lines with y-axis translation based on pixel value
