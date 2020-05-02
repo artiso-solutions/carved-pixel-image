@@ -7,12 +7,14 @@ class Margin:
     width: int
     height: int
 
+    
 class StickConfiguration:
     radius: float
     radiusCarveOffset: float
     minLength: float
     usageLength: float
     lengthJigOffset: float
+
 
 class Configuration(object):
     variant: str

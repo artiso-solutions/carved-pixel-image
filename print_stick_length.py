@@ -34,7 +34,7 @@ def main():
         
 
 def read_current_line(current_line_input_file, override_line_number):
-    print(f'reading current line fomr file {current_line_input_file} with override line number {override_line_number}')
+    print(f'reading current line from file {current_line_input_file} with override line number {override_line_number}')
     if override_line_number >= 0:
         return override_line_number
     
