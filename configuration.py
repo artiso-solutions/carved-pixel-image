@@ -51,7 +51,7 @@ def _from_json(data, cls):
         return instance
 
 def load_configuration(file_path):
-    with open('./test-data/configuration.json', 'r') as file:
+    with open(file_path, 'r') as file:
         data = json.load(file)
         configurations = []
         for configuration_data in data:
